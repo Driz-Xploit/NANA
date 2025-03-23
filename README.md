@@ -2,7 +2,7 @@
 Automation Information Gathering Active (Web only)
 <br><br><br>
 <img src='banner.png' width='650' height='400'>
-<br><br>
+<br>
 ## Instalation:
   ```bash
   git clone https://github.com/Driz-Xploit/NANA.git
