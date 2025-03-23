@@ -1,2 +1,3 @@
-# NANA
-Automation Information Gathering Active
+# NANA (Under Construction)
+Automation Information Gathering Active (Web only)
+
