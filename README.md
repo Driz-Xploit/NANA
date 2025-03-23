@@ -1,4 +1,4 @@
 # NANA (Under Construction)
 Automation Information Gathering Active (Web only)
 <br><br><br>
-![](banner.png)
+<img src='banner.png' width='850' height='500'>
