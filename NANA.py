@@ -141,7 +141,7 @@ def Options():
                                 return True, domainip
         except socket.gaierror:
                 print("|------->Ups! NANA see an invalid input!.")
-                print("|----------->Please enter the valid domain without http:// or https://")
+                print("|----------->Please enter the valid domain without spaces, http:// or https://")
                 print(f"+--------------------------------------------------------------------------------------->")
                 return False, None
         except ValueError:
