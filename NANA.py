@@ -530,3 +530,4 @@ def main():
                         pass
         except KeyboardInterrupt:
                 print("Good Bye!")
+main()
