@@ -1,5 +1,6 @@
 python-nmap
 tabulate
 colorama
-Threading
+ipaddress
+shutils
 socket
