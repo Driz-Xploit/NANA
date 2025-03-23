@@ -1,0 +1,5 @@
+python-nmap
+tabulate
+colorama
+Threading
+socket
