@@ -3,4 +3,3 @@ tabulate
 colorama
 ipaddress
 shutils
-socket
