@@ -1,4 +1,5 @@
 # import library
+import subprocess as pros
 import io
 import sys
 import time
@@ -7,12 +8,11 @@ import ipaddress
 import socket
 import threading
 import json
+if os.name == 'nt':
+        clear = 'cls'
+else:
+        clear = 'clear'
 ### clear screen
-def clear():
-        if os.name == 'nt':
-                os.system('cls')
-        else:
-                os.system('clear')
 ### module checker
 mod_not_installed = []
 not_installed_status = False
@@ -61,7 +61,7 @@ from colorama import Fore, Style, init
 # colorama get ready
 init()
 # clean all of user screen
-clear()
+os.system(clear)
 # NANA banner
 nana = fr"""{Fore.YELLOW}{Style.BRIGHT}                              .
                          ....:  .
@@ -102,6 +102,57 @@ method = None
 nm = None
 target_table = None
 type_target = None
+port_table = None
+port_lists = []
+loop_status = False
+# Naabu options
+opt_naabu = (f"""{Fore.RED}+---------------------------------------------------------------+
+| {Fore.YELLOW}1. 1-100 (common)                                             {Fore.RED}|
+| {Fore.YELLOW}2. 1-1000                                                     {Fore.RED}|
+| {Fore.YELLOW}3. 1-16383                                                    {Fore.RED}|
+| {Fore.YELLOW}4. 1-32767                                                    {Fore.RED}|
+| {Fore.YELLOW}5. 1-65535 (all port)                                         {Fore.RED}|
+| {Fore.YELLOW}6. Cancel                                                     {Fore.RED}|
++---------------------------------------------------------------+{Fore.CYAN}""")
+def naabu_runner(range_ports):
+        for i in pros.check_output(f'naabu -host {target} --silent -ports {range_ports}', shell=True, text=True).splitlines():
+                i = int(i.split(':')[1])
+                port_lists.append([i])
+def naabu_check(range_ports):
+        global target, port_table, port_lists, loop_status
+        naabu_thread = threading.Thread(target=naabu_runner, args=(range_ports,))
+        naabu_thread.start()
+        while naabu_thread.is_alive():
+                scan_ani()
+        naabu_thread.join()
+        try: 
+                access_test = port_lists[0]
+                sorted(port_lists)
+                port_table = table(port_lists, headers=['PORTS'], tablefmt='grid')
+                loop_status = False
+        except IndexError: 
+                while True:
+                        os.system(clear)
+                        print(f"|--> NANA!, there's no open ports for target in range: {range_ports}")
+                        input_temp = input('|----> Do you wanna change the range/continue?(y/n): ')
+                        if input_temp == 'y': break
+                        elif input_temp == 'n': sys.exit()
+                        else: pass
+def naabu_opt():
+        temp_opt = None
+        while True:
+                try:
+                        print(opt_naabu)
+                        temp_opt = int(input('|--> Range for open ports scanning: '))
+                        if temp_opt == 1: return '1-100'
+                        elif temp_opt == 2: return '1-1000'
+                        elif temp_opt == 3: return '1-16383'
+                        elif temp_opt == 4: return '1-32767'
+                        elif temp_opt == 5: return '1-65535'
+                        elif temp_opt == 6: restart()
+                        else: os.system(clear); print(f'{Fore.LIGHTRED_EX}|----> Please input a valid options! (1-6)')
+                except ValueError:
+                        os.system(clear); print(f'{Fore.LIGHTRED_EX}|----> Please input a valid options! (1-6)')
 # is the input of user is an ip?
 def isip(input):
         try:
@@ -158,7 +209,7 @@ def isup(target_ping):
                 check = os.system(f"ping -c 5 {target_ping} -W 1")
         print(f"+--------------------------------------------------------------------------------------->[NANA!, DONE!]<")
         if check == 0:
-                clear()
+                os.system(clear)
                 print(f"+--------------------------------------------------------------------------------------->[NANA!, DONE!]<")
                 print("|------>NANA!, target is up!. Let\'s begin!.<-------------------------------------------->")
         else:
@@ -187,22 +238,22 @@ spener = (f"""{Fore.RED}+-------------------------------------------------------
 def table_show(RE_TABLE, RE_JSON):
         temp_opt = 0
         while temp_opt != 7:
-                clear()
+                os.system(clear)
                 try:
                         print(tableopt)
                         temp_opt = int(input("|---->NANA!, I will show the results based on your options!: "))
                         if temp_opt == 1:
-                                clear()
+                                os.system(clear)
                                 print(RE_TABLE)
                                 temp = input(f"{Fore.RED}(Press enter for continue){Fore.CYAN}")
                         elif temp_opt == 2:
-                                clear()
+                                os.system(clear)
                                 print(Fore.CYAN+RE_JSON)
                                 temp = input(f"{Fore.RED}(Press enter for continue){Fore.CYAN}")
                         elif temp_opt == 3:
                                 temp_opt2 = None
                                 while temp_opt2 != "n":
-                                        clear()
+                                        os.system(clear)
                                         try:
                                                 temp_opt2 = input(f"|-->NANA!, Do you want to save json format result on '{target}-table'(y/n)?: ")
                                                 if temp_opt2 == "y":
@@ -224,7 +275,7 @@ def table_show(RE_TABLE, RE_JSON):
                         elif temp_opt == 4:
                                 temp_opt3 = None
                                 while temp_opt3 != "n":
-                                        clear()
+                                        os.system(clear)
                                         try:
                                                 temp_opt3 = input(f"|-->NANA!, Do you want to save json format result on '{target}-json'(y/n)?: ")
                                                 if temp_opt3 == "y":
@@ -244,7 +295,7 @@ def table_show(RE_TABLE, RE_JSON):
                                         except ValueError:
                                                 pass
                         elif temp_opt == 5:
-                                clear()
+                                os.system(clear)
                                 opt2()
                         elif temp_opt == 6:
                                 restart()
@@ -266,7 +317,7 @@ def runner():
         tem_opt2 = 0
         tem_opt3 = 0
         while tem_opt != 2:
-                clear()
+                os.system(clear)
                 temp_head = ["Target", "Domain/Hostname", "Method", "Parameter", "Type"]
                 temp_list = [[target, web, method, parameter, type_target]]
                 temp_table = table(temp_list, temp_head, tablefmt='grid', colalign=('center', 'left', 'right'), missingval='')
@@ -288,7 +339,7 @@ def runner():
                                                 pass
                                 checkmethod()
                         elif tem_opt == "n":
-                                clear()
+                                os.system(clear)
                                 opt2()
                         else:
                                 print("please input the valid input! --> 'y' or 'n'")
@@ -331,7 +382,7 @@ scanning_animation = ["-", "\\", "|", "/"]
 # animation of proccess scanning
 def scan_ani():
         for i in scanning_animation:
-                clear()
+                os.system(clear)
                 print(f"Wait a second!, NANA is scanning... ({i})")
                 time.sleep(1)
 # nmap is scanning...
@@ -376,13 +427,13 @@ def sV(nm):
         return temp_table
 # check method for execute
 def checkmethod():
-        clear()
+        os.system(clear)
         global method
         if method == "Service":
                 Version()
 # user options for speed of scanning
 def speedin():
-        clear()
+        os.system(clear)
         topt = 0
         global parameter
         while (topt != 6):
@@ -391,34 +442,34 @@ def speedin():
                 try:
                         topt = int(input(f"|-/{target}/Nmap/Speedscan/-> Enter the options!: "))
                         if topt == 1:
-                                clear()
+                                os.system(clear)
                                 parameter += " -T1"
                                 runner()
                         elif topt == 2:
-                                clear()
+                                os.system(clear)
                                 parameter += " -T2"
                                 runner()
                         elif topt == 3:
-                                clear()
+                                os.system(clear)
                                 parameter += " -T3"
                                 runner()
                         elif topt == 4:
-                                clear()
+                                os.system(clear)
                                 parameter += " -T4"
                                 runner()
                         elif topt == 5:
-                                clear()
+                                os.system(clear)
                                 parameter += " -T5"
                                 runner()
                         elif topt == 6:
-                                clear()
+                                os.system(clear)
                                 nminput()
                         elif (topt <= 0) or (topt >= 7):
-                                clear()
+                                os.system(clear)
                                 print(f"+--------------------------------------------------------------------------------------->")
                                 print("|------>NANA!, Enter the valid input!(1-6)")
                 except ValueError:
-                        clear()
+                        os.system(clear)
                         print(f"+--------------------------------------------------------------------------------------->")
                         print("|------>NANA!, Enter the valid input!(1-6)")
 #
@@ -426,8 +477,9 @@ opt2banner = (f"""{Fore.RED}+---------------------------------------------------
 | {Fore.YELLOW}1. Use Nmap only (Details scanning)                           {Fore.RED}|
 | {Fore.YELLOW}2. Use Naabu only (Fast scanning)                             {Fore.RED}|
 | {Fore.YELLOW}3. Use Naabu + Nmap (Fast and Details scanning)               {Fore.RED}|
-| {Fore.YELLOW}4. Change the target                                          {Fore.RED}|
-| {Fore.YELLOW}5. Exit                                                       {Fore.RED}|
+| {Fore.YELLOW}4. Print All open ports                                       {Fore.RED}|
+| {Fore.YELLOW}5. Change the target                                          {Fore.RED}|
+| {Fore.YELLOW}6. Exit                                                       {Fore.RED}|
 +---------------------------------------------------------------+{Fore.CYAN}""")
 #
 nmopt = (f"""{Fore.RED}+------------------------------------------------------------------------->
@@ -454,66 +506,72 @@ def nminput():
                                 parameter = "-sV"
                                 speedin()
                         elif nmin == 2:
-                                clear()
+                                os.system(clear)
                                 print(f"+--------------------------------------------------------------------------------------->")
                                 print("|----------NANA!, coming soon...")
                         elif nmin == 3:
-                                clear()
+                                os.system(clear)
                                 print(f"+--------------------------------------------------------------------------------------->")
                                 print("|----------NANA!, coming soon...")
                         elif nmin == 4:
-                                clear()
+                                os.system(clear)
                                 print(f"+--------------------------------------------------------------------------------------->")
                                 print("|----------NANA!, coming soon...")
                         elif nmin == 5:
-                                clear()
+                                os.system(clear)
                                 print(f"+--------------------------------------------------------------------------------------->")
                                 print("|----------NANA!, coming soon...")
                         elif nmin == 6:
-                                clear()
+                                os.system(clear)
                                 print(f"+--------------------------------------------------------------------------------------->")
                                 print("|----------NANA!, coming soon...")
                         elif nmin == 7:
-                                clear()
+                                os.system(clear)
                                 opt2()
                         elif (nmin <= 0) or (nmin >= 8):
-                                clear()
+                                os.system(clear)
                                 print(f"+--------------------------------------------------------------------------------------->")
                                 print("|------>NANA!, Enter the valid input!(1-4)")
                 except ValueError:
-                        clear()
+                        os.system(clear)
                         print(f"+--------------------------------------------------------------------------------------->")
                         print("|------>NANA!, Enter the valid input!(1-4)")
 ################################################################################# execute
 def opt2():
+        os.system(clear)
         opti2 = 0
         while opti2 != 5:
                 print(opt2banner)
                 try:
                         opti2 = int(input(f"|-/{target}/-> Enter the option!: "))
                         if opti2 == 1:
-                                clear()
+                                os.system(clear)
                                 nminput()
                         elif opti2 == 2:
-                                clear()
+                                os.system(clear)
                                 print(f"+--------------------------------------------------------------------------------------->")
                                 print("|----------NANA!, coming soon...")
                         elif opti2 == 3:
-                                clear()
+                                os.system(clear)
                                 print(f"+--------------------------------------------------------------------------------------->")
                                 print("|----------NANA!, coming soon...")
-                        elif opti2 == 4:
-                                clear()
-                                restart()
                         elif opti2 == 5:
+                                os.system(clear)
+                                restart()
+                        elif opti2 == 4:
+                                os.system(clear)
+                                print(port_table)
+                                temp_in = input('(Enter for continue)')
+                                os.system(clear)
+                        elif opti2 == 6:
                                 print(f"{Fore.RED}|--->NANA!, Good Bye!<---|")
                                 sys.exit()
                         elif (opti2 <= 0) or (opti2 >= 6):
-                                clear()
+                                os.system(clear)
                                 print(f"+--------------------------------------------------------------------------------------->")
                                 print("|------>NANA!, Enter the valid input!(1-4)")
                 except ValueError:
-                        clear()
+                        os.system(clear)
                         print(f"+--------------------------------------------------------------------------------------->")
                         print("|------>NANA!, Enter the valid input!(1-4)")
                 except KeyboardInterrupt:
@@ -521,10 +579,14 @@ def opt2():
                         sys.exit()
 def main():
         try:
-                global target
+                global target, loop_status
                 status_temp, target = Options()
                 if status_temp:
                         isup(target)
+                        loop_status = True
+                        while loop_status:
+                                range_ports = naabu_opt()
+                                naabu_check(range_ports)
                         opt2()
                 else:
                         pass
