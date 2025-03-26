@@ -3,12 +3,9 @@ Automation Information Gathering Active (Web only)
 <br><br><br>
 <img src='banner.png' width='450' height='300'>
 <br>
-
 ### requirements:
 1. Nmap
 2. Naabu
-
-<br>
 
 ### Instalation:
 
