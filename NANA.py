@@ -8,6 +8,7 @@ import ipaddress
 import socket
 import threading
 import json
+import shutil
 if os.name == 'nt':
         clear = 'cls'
 else:
@@ -16,7 +17,7 @@ else:
 ### module checker
 mod_not_installed = []
 not_installed_status = False
-def main_mod(list_mod):
+def main_mod(list_mod, args=''):
         try: # install modul if 'requirements.txt' is exist
                         file_to_mod = 'requirements.txt'
                         open(file_to_mod, 'r')
@@ -53,11 +54,20 @@ def test_mod():
                 print('Installing module.....')
                 main_mod(mod_not_installed)
 #$#
+def test_tool():
+        nmap = shutil.which('nmap')
+        naabu = shutil.which('naabu')
+        assert((naabu is None) == False), 'Naabu is not installed'
+        assert((nmap == '') == False), 'Nmap is not installed'
+###
 test_mod()
 ##### import proccess
-import nmap
-from tabulate import tabulate as table
-from colorama import Fore, Style, init
+try:
+        import nmap
+        from tabulate import tabulate as table
+        from colorama import Fore, Style, init
+except ModuleNotFoundError: print("|--> Somethings wrong with the library, can you fix it manually? <--|"); sys.exit()
+test_tool()
 # colorama get ready
 init()
 # clean all of user screen
@@ -115,6 +125,8 @@ opt_naabu = (f"""{Fore.RED}+----------------------------------------------------
 | {Fore.YELLOW}6. Cancel                                                     {Fore.RED}|
 +---------------------------------------------------------------+{Fore.CYAN}""")
 def naabu_runner(range_ports):
+        global port_lists
+        port_lists = []
         for i in pros.check_output(f'naabu -host {target} --silent -ports {range_ports}', shell=True, text=True).splitlines():
                 i = int(i.split(':')[1])
                 port_lists.append([i])
@@ -127,7 +139,7 @@ def naabu_check(range_ports):
         naabu_thread.join()
         try: 
                 access_test = port_lists[0]
-                sorted(port_lists)
+                port_lists = sorted(port_lists)
                 port_table = table(port_lists, headers=['PORTS'], tablefmt='grid')
                 loop_status = False
         except IndexError: 
@@ -314,8 +326,6 @@ def restart():
 def runner():
         global parameter
         tem_opt = 0
-        tem_opt2 = 0
-        tem_opt3 = 0
         while tem_opt != 2:
                 os.system(clear)
                 temp_head = ["Target", "Domain/Hostname", "Method", "Parameter", "Type"]
@@ -325,18 +335,6 @@ def runner():
                 try:
                         tem_opt = input("|-->Execute?(y/n): ")
                         if tem_opt == "y":
-                                while (tem_opt2 != "y") and (tem_opt2 != "n"):
-                                        tem_opt2 = input("|--> Do you want to use '-p-' to scan all ports?(y/n): ")
-                                        if tem_opt2 == "y":
-                                                parameter += " -p-"
-                                        else:
-                                                pass
-                                while (tem_opt3 != "y") and (tem_opt3 != "n"):
-                                        tem_opt3 = input("|----> Do you want to use '-Pn' to skip ping ICMP scan?(y/n): ")
-                                        if tem_opt3 == "y":
-                                                        parameter += " -Pn"
-                                        else:
-                                                pass
                                 checkmethod()
                         elif tem_opt == "n":
                                 os.system(clear)
@@ -387,8 +385,10 @@ def scan_ani():
                 time.sleep(1)
 # nmap is scanning...
 def nmapscan(nm):
-        global parameter, target
-        nm.scan(target, arguments=f'{parameter}')
+        global parameter, target, port_lists
+        port_temp_lists = f'{port_lists[0]}'
+        for i in port_lists: port_temp_lists += f",{i}"
+        nm.scan(target, arguments=f'{parameter}', ports=port_temp_lists)
 # nmap scanning thread
 def nmapproccess(nm):
         global parameter
@@ -474,12 +474,11 @@ def speedin():
                         print("|------>NANA!, Enter the valid input!(1-6)")
 #
 opt2banner = (f"""{Fore.RED}+---------------------------------------------------------------+
-| {Fore.YELLOW}1. Use Nmap only (Details scanning)                           {Fore.RED}|
-| {Fore.YELLOW}2. Use Naabu only (Fast scanning)                             {Fore.RED}|
-| {Fore.YELLOW}3. Use Naabu + Nmap (Fast and Details scanning)               {Fore.RED}|
-| {Fore.YELLOW}4. Print All open ports                                       {Fore.RED}|
-| {Fore.YELLOW}5. Change the target                                          {Fore.RED}|
-| {Fore.YELLOW}6. Exit                                                       {Fore.RED}|
+| {Fore.YELLOW}1. Nmap Scanning                                              {Fore.RED}|
+| {Fore.YELLOW}2. Print All open ports                                       {Fore.RED}|
+| {Fore.YELLOW}3. Change the range of the open port                          {Fore.RED}|
+| {Fore.YELLOW}4. Change the target                                          {Fore.RED}|
+| {Fore.YELLOW}5. Exit                                                       {Fore.RED}|
 +---------------------------------------------------------------+{Fore.CYAN}""")
 #
 nmopt = (f"""{Fore.RED}+------------------------------------------------------------------------->
@@ -531,11 +530,11 @@ def nminput():
                         elif (nmin <= 0) or (nmin >= 8):
                                 os.system(clear)
                                 print(f"+--------------------------------------------------------------------------------------->")
-                                print("|------>NANA!, Enter the valid input!(1-4)")
+                                print("|------>NANA!, Enter the valid input!(1-7)")
                 except ValueError:
                         os.system(clear)
                         print(f"+--------------------------------------------------------------------------------------->")
-                        print("|------>NANA!, Enter the valid input!(1-4)")
+                        print("|------>NANA!, Enter the valid input!(1-7)")
 ################################################################################# execute
 def opt2():
         os.system(clear)
@@ -547,47 +546,44 @@ def opt2():
                         if opti2 == 1:
                                 os.system(clear)
                                 nminput()
-                        elif opti2 == 2:
-                                os.system(clear)
-                                print(f"+--------------------------------------------------------------------------------------->")
-                                print("|----------NANA!, coming soon...")
-                        elif opti2 == 3:
-                                os.system(clear)
-                                print(f"+--------------------------------------------------------------------------------------->")
-                                print("|----------NANA!, coming soon...")
-                        elif opti2 == 5:
+                        elif opti2 == 4:
                                 os.system(clear)
                                 restart()
-                        elif opti2 == 4:
+                        elif opti2 == 3:
+                                naabu_main()
+                        elif opti2 == 2:
                                 os.system(clear)
                                 print(port_table)
                                 temp_in = input('(Enter for continue)')
                                 os.system(clear)
-                        elif opti2 == 6:
+                        elif opti2 == 5:
                                 print(f"{Fore.RED}|--->NANA!, Good Bye!<---|")
                                 sys.exit()
                         elif (opti2 <= 0) or (opti2 >= 6):
                                 os.system(clear)
                                 print(f"+--------------------------------------------------------------------------------------->")
-                                print("|------>NANA!, Enter the valid input!(1-4)")
+                                print("|------>NANA!, Enter the valid input!(1-5)")
                 except ValueError:
                         os.system(clear)
                         print(f"+--------------------------------------------------------------------------------------->")
-                        print("|------>NANA!, Enter the valid input!(1-4)")
+                        print("|------>NANA!, Enter the valid input!(1-5)")
                 except KeyboardInterrupt:
                         print(f"{Fore.RED}\n|-~--~->NANA!, Good Bye!<-~-~-|")
                         sys.exit()
+def naabu_main():
+        global loop_status
+        loop_status = True
+        while loop_status:
+                range_ports = naabu_opt()
+                naabu_check(range_ports)
+        opt2()
 def main():
         try:
-                global target, loop_status
+                global target
                 status_temp, target = Options()
                 if status_temp:
                         isup(target)
-                        loop_status = True
-                        while loop_status:
-                                range_ports = naabu_opt()
-                                naabu_check(range_ports)
-                        opt2()
+                        naabu_main()
                 else:
                         pass
         except KeyboardInterrupt:
